@@ -60,11 +60,10 @@ jobs:
     environment: prod
     steps:
       - name: Checkout code
-        uses: actions/checkout@
+        uses: actions/checkout@v3
         
       - name: Generate SSH Key for Bastion
-        run: |
-          ssh-keygen -t rsa -f group -N ""
+        run: ssh-keygen -t rsa -f group -N ""
         working-directory: terraform/webserver
 
       - name: Configure AWS credentials
