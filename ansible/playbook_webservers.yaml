@@ -1,0 +1,32 @@
+---
+- name: Configure Webservers
+  hosts: aws_ec2
+  become: true
+
+  tasks:
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: present
+
+    - name: Start and enable Apache
+      service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Copy demo.png to webserver
+      copy:
+        src: /home/ec2-user/environment/ansible/demo.png
+        dest: /var/www/html/demo.png
+        owner: apache
+        group: apache
+        mode: '0644'
+
+    - name: Deploy index.html from template
+      template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        owner: apache
+        group: apache
+        mode: '0644'
