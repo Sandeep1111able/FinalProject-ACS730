@@ -17,7 +17,7 @@
 
     - name: Copy demo.png to webserver
       copy:
-        src: /home/ec2-user/environment/ansible/demo.png
+        src: /home/ec2-user/environment/FinalProject-ACS730/ansible/demo.png
         dest: /var/www/html/demo.png
         owner: apache
         group: apache
