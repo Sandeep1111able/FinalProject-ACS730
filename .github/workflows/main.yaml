@@ -51,12 +51,8 @@ jobs:
         working-directory: terraform/network
 
       - name: Terraform Apply (Network)
-        run: terraform apply -auto-approve
+        run: terraform apply --auto-approve
         working-directory: terraform/network
-
-      - name: Generate SSH key for Bastion
-        run: |
-          ssh-keygen -t rsa -b 2048 -f terraform/webserver/group -N ""
 
   terraform-webserver:
     needs: terraform-network
@@ -64,7 +60,12 @@ jobs:
     environment: prod
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@
+        
+      - name: Generate SSH Key for Bastion
+        run: |
+          ssh-keygen -t rsa -f group -N ""
+        working-directory: terraform/webserver
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -84,5 +85,5 @@ jobs:
         working-directory: terraform/webserver
 
       - name: Terraform Apply (Webserver)
-        run: terraform apply -auto-approve
+        run: terraform apply --auto-approve
         working-directory: terraform/webserver
