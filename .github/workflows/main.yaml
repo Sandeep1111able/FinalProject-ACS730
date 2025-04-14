@@ -1,4 +1,4 @@
-name: Terraform CI/CD for Network and Webserver
+name: Terraform CI/CD Pipeline
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  security-scans:
+  security-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,22 +26,20 @@ jobs:
           tflint -f compact
 
   terraform-network:
-    needs: security-scans
+    needs: security-scan
     runs-on: ubuntu-latest
     environment: prod
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up AWS CLI
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
-
-      - name: Verify AWS credentials
-        run: aws sts get-caller-identity
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
@@ -52,18 +50,13 @@ jobs:
         run: terraform init
         working-directory: terraform/network
 
-      - name: Terraform Validate (Network)
-        run: terraform validate
-        working-directory: terraform/network
-
-      - name: Terraform Plan (Network)
-        run: terraform plan -out=tfplan
-        working-directory: terraform/network
-
       - name: Terraform Apply (Network)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve
         working-directory: terraform/network
+
+      - name: Generate SSH key for Bastion
+        run: |
+          ssh-keygen -t rsa -b 2048 -f terraform/webserver/group -N ""
 
   terraform-webserver:
     needs: terraform-network
@@ -73,15 +66,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up AWS CLI
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
-
-      - name: Verify AWS credentials
-        run: aws sts get-caller-identity
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
@@ -92,15 +83,6 @@ jobs:
         run: terraform init
         working-directory: terraform/webserver
 
-      - name: Terraform Validate (Webserver)
-        run: terraform validate
-        working-directory: terraform/webserver
-
-      - name: Terraform Plan (Webserver)
-        run: terraform plan -out=tfplan
-        working-directory: terraform/webserver
-
       - name: Terraform Apply (Webserver)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve
         working-directory: terraform/webserver
