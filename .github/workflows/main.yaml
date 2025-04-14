@@ -1,0 +1,68 @@
+name: ACS730 Infrastructure Automation
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+
+    # Step 1: Deploy network
+    - name: Terraform Init - Network
+      run: terraform init
+      working-directory: terraform/network
+
+    - name: Terraform Apply - Network
+      run: terraform apply -auto-approve
+      working-directory: terraform/network
+
+    # Step 2: Generate SSH key named 'group'
+    - name: Generate SSH Key
+      run: |
+        ssh-keygen -t rsa -b 4096 -f terraform/webserver/group -q -N ""
+        echo "Private key created as 'group'"
+
+    # Step 3: Terraform Webserver Apply
+    - name: Terraform Init - Webserver
+      run: terraform init
+      working-directory: terraform/webserver
+
+    - name: Terraform Apply - Webserver
+      run: terraform apply -auto-approve
+      working-directory: terraform/webserver
+
+    # Step 4: Get Bastion IP Output
+    - name: Get Bastion IP
+      id: bastion
+      run: |
+        cd terraform/webserver
+        terraform output -raw bastion_ip > bastion_ip.txt
+        echo "BASTION_IP=$(cat bastion_ip.txt)" >> $GITHUB_ENV
+
+    # Step 5: SCP private key to Bastion
+    - name: SCP group.pem to Bastion
+      run: |
+        chmod 400 terraform/webserver/group
+        scp -o StrictHostKeyChecking=no -i terraform/webserver/group terraform/webserver/group ec2-user@${{ env.BASTION_IP }}:/home/ec2-user/
+
+    # Step 6: SSH and chmod inside Bastion
+    - name: SSH into Bastion and chmod key
+      run: |
+        ssh -o StrictHostKeyChecking=no -i terraform/webserver/group ec2-user@${{ env.BASTION_IP }} "chmod 400 group"
