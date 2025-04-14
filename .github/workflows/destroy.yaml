@@ -24,9 +24,17 @@ jobs:
         with:
           terraform_version: 1.5.0
 
+      - name: Terraform Init (Webserver)
+        run: terraform init -reconfigure
+        working-directory: terraform/webserver
+
       - name: Terraform Destroy (Webserver)
         run: terraform destroy --auto-approve
         working-directory: terraform/webserver
+
+      - name: Terraform Init (Network)
+        run: terraform init -reconfigure
+        working-directory: terraform/network
 
       - name: Terraform Destroy (Network)
         run: terraform destroy --auto-approve
