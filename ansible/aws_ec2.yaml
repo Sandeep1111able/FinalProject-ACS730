@@ -1,0 +1,13 @@
+plugin: aws_ec2
+regions:
+  - us-east-1
+
+filters:
+  tag:Role:
+    - Web
+    - Bastion
+
+compose:
+  ansible_host: public_ip_address
+
+strict: False
