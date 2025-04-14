@@ -60,6 +60,12 @@ jobs:
       - name: Generate SSH Key for Bastion
         run: ssh-keygen -t rsa -f group -N ""
         working-directory: terraform/webserver
+        
+      - name: Upload group private key as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bastion-key
+          path: terraform/webserver/group  
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
