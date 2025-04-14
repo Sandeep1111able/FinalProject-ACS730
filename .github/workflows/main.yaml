@@ -1,12 +1,7 @@
 name: Terraform CI/CD Pipeline
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   security-scan:
@@ -86,3 +81,28 @@ jobs:
       - name: Terraform Apply (Webserver)
         run: terraform apply --auto-approve
         working-directory: terraform/webserver
+        
+  ansible-deployment:
+    needs: terraform-webserver
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python and install Ansible & AWS modules
+        run: python3 -m pip install --upgrade pip && pip install ansible boto boto3 && ansible-galaxy collection install amazon.aws
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Run Ansible playbook to download image from S3
+        run: ansible-playbook ansible/playbook_getimage.yaml
+          
+      - name: Run Ansible playbook to configure webservers
+        run: ansible-playbook -i ansible/aws_ec2.yaml ansible/playbook_webservers.yaml
