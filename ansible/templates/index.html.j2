@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ACS730 Final Project</title>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 36px;
+        }
+        p {
+            color: #34495e;
+            font-size: 18px;
+        }
+        img {
+            max-width: 1000px;
+            width: 100%;
+            height: auto;
+            margin-top: 30px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+        .team {
+            margin-top: 40px;
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to ACS730 Final Project</h1>
+    <p> Private IP: <strong>{{ ansible_default_ipv4.address }}</strong></p>
+    <img src="./demo.png" alt="Project Demo Image">
+    <div class="team">
+        Created with ❤️ by <strong>Sandeep</strong>, <strong>Bishal</strong>, <strong>Kushal</strong>, and <strong>Ajay</strong>
+    </div>
+</body>
+</html>
