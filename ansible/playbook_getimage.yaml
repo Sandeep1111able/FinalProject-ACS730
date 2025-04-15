@@ -4,7 +4,7 @@
   tasks:
     - name: Download file from S3
       amazon.aws.aws_s3:
-        bucket: acs730-finalproject
+        bucket: acs730-finalbucket
         object: demo.png
         dest: /home/ec2-user/environment/FinalProject-ACS730/ansible/demo.png
         mode: get
