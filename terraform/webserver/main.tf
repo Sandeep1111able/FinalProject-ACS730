@@ -6,7 +6,7 @@ provider "aws" {
 data "terraform_remote_state" "network" {
   backend = "s3"
   config = {
-    bucket = "acs730-finalproject-bucket"
+    bucket = "acs730-finalbucket"
     key    = "prod/network/terraform.tfstate"
     region = "us-east-1"
   }
